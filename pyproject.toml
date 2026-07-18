@@ -1,0 +1,40 @@
+[project]
+name = "architecture-discovery-mcp"
+version = "0.3.0"
+description = "Auto-discover enterprise architecture artifacts from Java source code"
+requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+keywords = ["architecture", "java", "mcp", "enterprise", "TOGAF", "code-analysis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Documentation",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "streamlit>=1.28.0",
+    "javalang>=0.13.0",
+    "openpyxl>=3.1.0",
+    "python-pptx>=0.6.21",
+    "pandas>=2.0.0",
+    "pyyaml>=6.0",
+    "anthropic>=0.39.0",
+    "mcp>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[project.scripts]
+architecture-discovery-mcp = "src.mcp_server:main"
