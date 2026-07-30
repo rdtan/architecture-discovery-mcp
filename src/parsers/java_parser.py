@@ -22,6 +22,8 @@ class JavaClass:
     fields: list[dict] = field(default_factory=list)
     is_interface: bool = False
     imports: list[str] = field(default_factory=list)
+    extends_class: str = ""
+    documentation: str = ""
 
 
 def parse_java_file(file_path: Path) -> JavaClass | None:
@@ -109,8 +111,27 @@ def _build_java_class(
                     "type": f.type.name if f.type else "",
                 }
                 if f.annotations:
-                    field_info["annotations"] = [a.name for a in f.annotations]
+                    ann_list = []
+                    for a in f.annotations:
+                        detail = {"name": a.name, "params": {}}
+                        if a.element:
+                            if isinstance(a.element, list):
+                                detail["params"] = {
+                                    e.name: _annotation_value(e.value)
+                                    for e in a.element
+                                }
+                            else:
+                                detail["params"] = {"value": _annotation_value(a.element)}
+                        ann_list.append(detail)
+                    field_info["annotations"] = ann_list
                 fields.append(field_info)
+
+    extends_class = ""
+    if hasattr(node, "extends") and node.extends:
+        if hasattr(node.extends, "name"):
+            extends_class = node.extends.name
+
+    documentation = node.documentation or "" if hasattr(node, "documentation") else ""
 
     return JavaClass(
         class_name=node.name,
@@ -121,6 +142,8 @@ def _build_java_class(
         fields=fields,
         is_interface=is_interface,
         imports=imports,
+        extends_class=extends_class,
+        documentation=documentation,
     )
 
 

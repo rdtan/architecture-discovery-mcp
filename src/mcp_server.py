@@ -11,6 +11,7 @@ from src.analyzers.integration_analyzer import analyze_integrations
 from src.generators.app_architecture_generator import generate_app_architecture
 from src.generators.aa07_generator import generate_aa07
 from src.generators.aa08_generator import generate_aa08
+from src.generators.da_combined_generator import generate_all_da
 from src.serializers import project_to_dict
 from src.i18n import t
 
@@ -143,18 +144,36 @@ def export_intermediate_data(project_path: str, output_path: str = "", locale: s
 
 
 @mcp.tool()
-def generate_data_architecture(project_path: str, output_dir: str = "", locale: str = "zh") -> str:
-    """生成数据架构（DA 系列）制品。
+def generate_data_architecture_tool(project_path: str, output_dir: str = "", locale: str = "zh") -> str:
+    """扫描 Java 项目并生成数据架构全套制品（DA-01~DA-07）。
+
+    生成 7 个独立 Excel 文件（DA-01 至 DA-07）及一个合并多 Sheet 工作簿。
 
     Args:
-        project_path: Java/Maven 项目根目录路径
-        output_dir: 制品输出目录
+        project_path: Java/Maven 项目根目录路径（须包含 pom.xml）
+        output_dir: 制品输出目录，默认为项目路径下的 arch-output/
         locale: 输出语言 zh|en，默认 zh
     """
-    return json.dumps({
-        "success": False,
-        "message": t("msg.da_not_supported", locale),
-    }, ensure_ascii=False)
+    path = _validate_project_path(project_path, locale)
+
+    out = Path(output_dir) if output_dir else path / "arch-output"
+    out.mkdir(parents=True, exist_ok=True)
+
+    project = scan_project(path)
+    project = analyze_modules(project)
+
+    outputs = generate_all_da(project, out, locale=locale)
+
+    result = {
+        "success": True,
+        "summary": {
+            "total_files": len(outputs),
+        },
+        "artifacts": [
+            {"name": p.name, "path": str(p)} for p in outputs
+        ],
+    }
+    return json.dumps(result, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()

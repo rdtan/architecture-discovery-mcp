@@ -158,6 +158,71 @@ def test_llm_enhancer_module_description_disabled():
     assert result == "管理order相关业务"
 
 
+def test_generate_da_cdm(sample_project_path, tmp_path):
+    from src.generators.da_cdm_generator import generate_da_cdm
+    from src.analyzers.data_entity_analyzer import analyze_data_entities
+    project = scan_project(sample_project_path)
+    project = analyze_modules(project)
+    entities, relationships = analyze_data_entities(project)
+    output = generate_da_cdm(project, entities, relationships, tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+    assert output.stat().st_size > 0
+
+
+def test_generate_da_cdm_empty(tmp_path):
+    from src.generators.da_cdm_generator import generate_da_cdm
+    from src.models.project import ProjectInfo
+    project = ProjectInfo(name="empty", path=tmp_path)
+    output = generate_da_cdm(project, [], [], tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+
+
+def test_generate_da_ldm(sample_project_path, tmp_path):
+    from src.generators.da_ldm_generator import generate_da_ldm
+    from src.analyzers.data_entity_analyzer import analyze_data_entities
+    project = scan_project(sample_project_path)
+    project = analyze_modules(project)
+    entities, relationships = analyze_data_entities(project)
+    output = generate_da_ldm(project, entities, relationships, tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+    assert output.stat().st_size > 0
+
+
+def test_generate_da_ldm_empty(tmp_path):
+    from src.generators.da_ldm_generator import generate_da_ldm
+    from src.models.project import ProjectInfo
+    project = ProjectInfo(name="empty", path=tmp_path)
+    output = generate_da_ldm(project, [], [], tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+
+
+def test_generate_da_flow(sample_project_path, tmp_path):
+    from src.generators.da_flow_generator import generate_da_flow
+    from src.analyzers.data_entity_analyzer import analyze_data_entities
+    from src.analyzers.crud_analyzer import analyze_crud
+    project = scan_project(sample_project_path)
+    project = analyze_modules(project)
+    entities, _ = analyze_data_entities(project)
+    crud_records = analyze_crud(project, entities)
+    output = generate_da_flow(project, entities, crud_records, tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+    assert output.stat().st_size > 0
+
+
+def test_generate_da_flow_empty(tmp_path):
+    from src.generators.da_flow_generator import generate_da_flow
+    from src.models.project import ProjectInfo
+    project = ProjectInfo(name="empty", path=tmp_path)
+    output = generate_da_flow(project, [], [], tmp_path)
+    assert output.exists()
+    assert output.suffix == ".pptx"
+
+
 def test_llm_enhancer_integration_description_disabled():
     enhancer = LLMEnhancer(enabled=False)
     integration = Integration(

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import re
 
 from src.parsers.java_parser import JavaClass
 
@@ -10,6 +11,9 @@ HTTP_METHOD_ANNOTATIONS = {
     "PatchMapping": "PATCH",
     "RequestMapping": "",
 }
+
+MYBATIS_BASE_CLASSES = {"BaseEntity", "TreeEntity"}
+MYBATIS_EXCLUDED_CLASSES = {"BaseEntity", "TreeEntity", "BaseController", "AjaxResult", "R", "TableDataInfo", "PageDomain"}
 
 
 @dataclass
@@ -67,11 +71,29 @@ def extract_spring_metadata(java_class: JavaClass) -> SpringMetadata:
                 else detail.get("value", "")
             )
 
+    # MyBatis entity detection: classes extending BaseEntity/TreeEntity in domain packages
+    if not metadata.is_entity and java_class.extends_class in MYBATIS_BASE_CLASSES:
+        if java_class.class_name not in MYBATIS_EXCLUDED_CLASSES:
+            metadata.is_entity = True
+            if not metadata.table_name:
+                metadata.table_name = _extract_table_from_javadoc(java_class.documentation)
+
     # Extract endpoints for controllers and feign clients
     if metadata.is_controller or metadata.is_feign_client:
         metadata.endpoints = _extract_endpoints(java_class, metadata.base_path)
 
     return metadata
+
+
+def _extract_table_from_javadoc(documentation: str) -> str:
+    """Extract table name from Javadoc comment.
+
+    Matches snake_case identifiers like 'sys_config', 'gen_table_column'.
+    """
+    if not documentation:
+        return ""
+    match = re.search(r'\b([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b', documentation)
+    return match.group(1) if match else ""
 
 
 def _extract_endpoints(java_class: JavaClass, base_path: str) -> list[dict]:

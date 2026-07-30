@@ -37,11 +37,41 @@ class Integration:
 
 
 @dataclass
+class EntityField:
+    name: str
+    java_type: str
+    column_name: str = ""
+    is_primary_key: bool = False
+    is_nullable: bool = True
+    is_foreign_key: bool = False
+    fk_target_entity: str = ""
+    comment: str = ""
+
+
+@dataclass
 class DataEntity:
     module_name: str
     class_name: str
     table_name: str = ""
-    fields: list[dict] = field(default_factory=list)
+    fields: list[EntityField] = field(default_factory=list)
+    data_domain: str = ""
+    data_category: str = ""
+
+
+@dataclass
+class DataRelationship:
+    source_entity: str
+    target_entity: str
+    relationship_type: str
+    fk_field: str = ""
+    join_table: str = ""
+
+
+@dataclass
+class EnumDefinition:
+    module_name: str
+    class_name: str
+    values: list[dict] = field(default_factory=list)
 
 
 @dataclass

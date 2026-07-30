@@ -106,12 +106,6 @@ async def test_placeholder_tools_return_not_supported(server_params):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
-            result = await session.call_tool("generate_data_architecture", {
-                "project_path": "/any/path",
-            })
-            content = result.content[0].text
-            assert "尚未支持" in content
-
             result = await session.call_tool("generate_tech_architecture", {
                 "project_path": "/any/path",
             })

@@ -1,8 +1,7 @@
 output/
-arch-output/
 dist/
-build/
-*.egg-info/
 __pycache__/
+**/__pycache__/
 *.pyc
-.pytest_cache/
+*.egg-info/
+src/architecture_discovery_mcp.egg-info/

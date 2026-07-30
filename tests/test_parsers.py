@@ -86,3 +86,58 @@ def test_controller_endpoint_paths(order_service_path):
     put_ep = next(e for e in metadata.endpoints if e["method_name"] == "updateStatus")
     assert put_ep["http_method"] == "PUT"
     assert put_ep["path"] == "/api/orders/{id}/status"
+
+
+# --- Field-level annotation parameter tests ---
+
+
+def test_field_annotations_contain_params(order_service_path):
+    """Field annotations should be dicts with name and params, not plain strings."""
+    path = order_service_path / "src/main/java/com/example/order/entity/Order.java"
+    result = parse_java_file(path)
+    assert result is not None
+
+    for f in result.fields:
+        if "annotations" in f:
+            for ann in f["annotations"]:
+                assert isinstance(ann, dict), (
+                    f"Expected annotation to be a dict, got {type(ann)}"
+                )
+                assert "name" in ann
+                assert "params" in ann
+
+
+def test_userid_field_column_annotation(order_service_path):
+    """userId field should have @Column(name = 'user_id') captured with params."""
+    path = order_service_path / "src/main/java/com/example/order/entity/Order.java"
+    result = parse_java_file(path)
+    assert result is not None
+
+    user_id_field = next(f for f in result.fields if f["name"] == "userId")
+    assert "annotations" in user_id_field
+
+    column_ann = next(
+        a for a in user_id_field["annotations"] if a["name"] == "Column"
+    )
+    assert column_ann == {"name": "Column", "params": {"name": "user_id"}}
+
+
+def test_id_field_annotations(order_service_path):
+    """id field should have @Id (no params) and @GeneratedValue with strategy param."""
+    path = order_service_path / "src/main/java/com/example/order/entity/Order.java"
+    result = parse_java_file(path)
+    assert result is not None
+
+    id_field = next(f for f in result.fields if f["name"] == "id")
+    assert "annotations" in id_field
+
+    id_ann = next(a for a in id_field["annotations"] if a["name"] == "Id")
+    assert id_ann == {"name": "Id", "params": {}}
+
+    gen_value_ann = next(
+        a for a in id_field["annotations"] if a["name"] == "GeneratedValue"
+    )
+    assert gen_value_ann == {
+        "name": "GeneratedValue",
+        "params": {"strategy": "GenerationType.IDENTITY"},
+    }
