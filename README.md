@@ -6,6 +6,7 @@ Auto-discover enterprise architecture artifacts from Java/Maven source code. Sca
 
 Point it at a Java/Maven project and get:
 
+**Application Architecture (AA):**
 - **AA-01** Application Module Inventory (Excel)
 - **AA-02** Function Item Inventory (Excel)
 - **AA-03** Sub-function Inventory (Excel)
@@ -13,6 +14,18 @@ Point it at a Java/Maven project and get:
 - **AA-05** Integration Inventory (Excel)
 - **AA-07** Application Architecture Diagram (PPTX)
 - **AA-08** Application Integration Diagram (PPTX)
+
+**Data Architecture (DA):**
+- **DA-01** Conceptual Entity List (Excel)
+- **DA-02** Logical Entity List (Excel)
+- **DA-03** Physical Entity List (Excel)
+- **DA-04** Database Table List (Excel)
+- **DA-05** Data Source List (Excel)
+- **DA-06** Table-Function Relationship (Excel)
+- **DA-07** Data Dictionary (Excel)
+- **DA-CDM** Conceptual Data Model Diagram (PPTX)
+- **DA-LDM** Logical Data Model Diagram (PPTX)
+- **DA-Flow** Data Flow Diagram (PPTX)
 
 All generated from static analysis — no runtime required, no code leaves your machine.
 
@@ -76,7 +89,7 @@ Then ask your AI assistant naturally:
 | `scan_project_tool` | Scan project structure, return modules/frameworks overview |
 | `generate_app_architecture_tool` | Generate full AA artifact set (Excel + PPTX) |
 | `export_intermediate_data` | Export structured analysis as JSON |
-| `generate_data_architecture` | DA artifacts (coming soon) |
+| `generate_data_architecture` | Generate full DA artifact set (Excel + PPTX) |
 | `generate_tech_architecture` | TA artifacts (coming soon) |
 
 All tools accept an optional `locale` parameter (`"zh"` or `"en"`, default `"zh"`).
@@ -104,11 +117,33 @@ generate_aa07(project, out, locale="en")
 generate_aa08(project, integrations, out, locale="en")
 ```
 
+### Data Architecture Generation
+
+```python
+from src.analyzers.data_entity_analyzer import analyze_data_entities
+from src.analyzers.enum_analyzer import analyze_enums
+from src.analyzers.crud_analyzer import analyze_crud
+from src.generators.da_combined_generator import generate_all_da
+
+project = scan_project(Path("your-java-project"))
+project = analyze_modules(project)
+endpoints = analyze_apis(project)
+
+entities = analyze_data_entities(project)
+enums = analyze_enums(project)
+crud_records = analyze_crud(entities, endpoints)
+
+generate_all_da(project, entities, enums, crud_records, out, locale="en")
+```
+
 ## Supported Projects
 
 - Java/Maven projects (must have `pom.xml`)
 - Spring Boot / Spring Cloud microservices
 - Feign client integration detection
+- JPA entity detection (@Entity, @Table, @Column)
+- MyBatis mapper XML parsing
+- Enum scanning and data dictionary generation
 - Nested multi-module projects (e.g. RuoYi-Cloud style)
 
 ## Internationalization
