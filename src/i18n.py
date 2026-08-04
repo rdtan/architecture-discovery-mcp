@@ -228,6 +228,71 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "da.guide_da05_desc": {"zh": "记录每个实体被哪些应用功能执行了CRUD操作", "en": "Records which app functions perform CRUD operations on each entity"},
     "da.guide_da06_desc": {"zh": "记录每张库表被哪些功能子项执行了CRUD操作", "en": "Records which function sub-items perform CRUD on each table"},
     "da.guide_da07_desc": {"zh": "提取所有枚举类型定义及其枚举值", "en": "Extracts all enum type definitions and their values"},
+
+    # --- DA-08 Sheet and Headers (字段级映射清单) ---
+    "sheet.da08": {"zh": "DA-08 字段级映射清单", "en": "DA-08 Field-Level Lineage"},
+    "h.da08.source_system": {"zh": "源系统", "en": "Source System"},
+    "h.da08.source_entity": {"zh": "源库表/实体", "en": "Source Entity"},
+    "h.da08.source_field": {"zh": "源字段", "en": "Source Field"},
+    "h.da08.target_system": {"zh": "目标系统", "en": "Target System"},
+    "h.da08.target_entity": {"zh": "目标库表/实体", "en": "Target Entity"},
+    "h.da08.target_field": {"zh": "目标字段", "en": "Target Field"},
+    "h.da08.mapping_type": {"zh": "映射规则", "en": "Mapping Type"},
+    "h.da08.transform_expr": {"zh": "转换表达式", "en": "Transform Expression"},
+    "h.da08.trigger_mode": {"zh": "触发方式", "en": "Trigger Mode"},
+    "h.da08.confidence": {"zh": "置信度", "en": "Confidence"},
+    "h.da08.evidence": {"zh": "证据来源", "en": "Evidence Source"},
+
+    # --- DA-09 Sheet and Headers (数据流转清单) ---
+    "sheet.da09": {"zh": "DA-09 数据流转清单", "en": "DA-09 Data Flow Inventory"},
+    "h.da09.flow_id": {"zh": "流转编号", "en": "Flow ID"},
+    "h.da09.source_system": {"zh": "源系统/模块", "en": "Source System/Module"},
+    "h.da09.target_system": {"zh": "目标系统/模块", "en": "Target System/Module"},
+    "h.da09.transport_type": {"zh": "传输方式", "en": "Transport Type"},
+    "h.da09.data_objects": {"zh": "数据对象", "en": "Data Objects"},
+    "h.da09.frequency": {"zh": "同步频率", "en": "Sync Frequency"},
+    "h.da09.volume_estimate": {"zh": "数据量级", "en": "Volume Estimate"},
+
+    # --- DA Lineage filenames ---
+    "file.da08": {"zh": "DA-08_字段级映射清单.xlsx", "en": "DA-08_Field_Level_Lineage.xlsx"},
+    "file.da09": {"zh": "DA-09_数据流转清单.xlsx", "en": "DA-09_Data_Flow_Inventory.xlsx"},
+    "file.da_lineage": {"zh": "DA-LINEAGE_数据血缘图.pptx", "en": "DA-LINEAGE_Data_Lineage.pptx"},
+
+    # --- DA Lineage PPTX titles ---
+    "pptx.lineage_diagram": {"zh": "数据血缘图 - {name}", "en": "Data Lineage Diagram - {name}"},
+    "pptx.lineage_overview": {"zh": "数据血缘概览 - {name}", "en": "Data Lineage Overview - {name}"},
+    "pptx.lineage_legend_title": {"zh": "映射类型", "en": "Mapping Type"},
+    "pptx.lineage_fields_label": {"zh": "{count} 个字段", "en": "{count} fields"},
+    "pptx.lineage_more_entities": {"zh": "+{count} 更多实体", "en": "+{count} more entities"},
+
+    # --- DA-08/09 mapping type values ---
+    "val.direct_mapping": {"zh": "直接映射", "en": "Direct"},
+    "val.transform": {"zh": "转换", "en": "Transform"},
+    "val.aggregate": {"zh": "聚合", "en": "Aggregate"},
+    "val.concat": {"zh": "拼接", "en": "Concat"},
+    "val.constant": {"zh": "常量", "en": "Constant"},
+
+    # --- DA-08 confidence values ---
+    "val.confidence_high": {"zh": "高(声明式)", "en": "High (Declarative)"},
+    "val.confidence_medium": {"zh": "中(推断)", "en": "Medium (Inferred)"},
+    "val.confidence_low": {"zh": "低(启发式)", "en": "Low (Heuristic)"},
+
+    # --- DA-08 trigger mode values ---
+    "val.realtime": {"zh": "实时", "en": "Realtime"},
+    "val.scheduled": {"zh": "定时", "en": "Scheduled"},
+    "val.event_driven": {"zh": "事件驱动", "en": "Event-Driven"},
+
+    # --- DA-IMPACT Sheet and Headers (影响分析报告) ---
+    "sheet.da_impact": {"zh": "DA-IMPACT 影响分析报告", "en": "DA-IMPACT Impact Analysis"},
+    "file.da_impact": {"zh": "DA-IMPACT_影响分析报告_{field}.xlsx", "en": "DA-IMPACT_Impact_Analysis_{field}.xlsx"},
+    "h.da_impact.affected_field": {"zh": "受影响字段", "en": "Affected Field"},
+    "h.da_impact.system": {"zh": "所属系统", "en": "System"},
+    "h.da_impact.entity": {"zh": "所属实体", "en": "Entity"},
+    "h.da_impact.field": {"zh": "字段名", "en": "Field Name"},
+    "h.da_impact.path": {"zh": "传播路径", "en": "Propagation Path"},
+    "h.da_impact.depth": {"zh": "传播深度", "en": "Depth"},
+    "h.da_impact.mapping_type": {"zh": "映射类型", "en": "Mapping Type"},
+    "h.da_impact.min_confidence": {"zh": "最低置信度", "en": "Min Confidence"},
 }
 
 
@@ -295,6 +360,22 @@ HEADER_KEYS: dict[str, list[str]] = {
         "h.da07.enum_type_id", "h.da07.enum_type_name", "h.da07.enum_cn_name",
         "h.da07.enum_value", "h.da07.enum_en_name",
         "h.da07.status", "h.da07.related_attr",
+    ],
+    "da08": [
+        "h.da08.source_system", "h.da08.source_entity", "h.da08.source_field",
+        "h.da08.target_system", "h.da08.target_entity", "h.da08.target_field",
+        "h.da08.mapping_type", "h.da08.transform_expr", "h.da08.trigger_mode",
+        "h.da08.confidence", "h.da08.evidence",
+    ],
+    "da09": [
+        "h.da09.flow_id", "h.da09.source_system", "h.da09.target_system",
+        "h.da09.transport_type", "h.da09.data_objects", "h.da09.frequency",
+        "h.da09.volume_estimate",
+    ],
+    "da_impact": [
+        "h.da_impact.affected_field", "h.da_impact.system", "h.da_impact.entity",
+        "h.da_impact.field", "h.da_impact.path", "h.da_impact.depth",
+        "h.da_impact.mapping_type", "h.da_impact.min_confidence",
     ],
 }
 

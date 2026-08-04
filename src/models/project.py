@@ -88,6 +88,57 @@ class Module:
 
 
 @dataclass
+class MethodInvocationInfo:
+    qualifier: str
+    method_name: str
+    arguments: list[str] = field(default_factory=list)
+    line_number: int = 0
+
+
+@dataclass
+class LocalVariable:
+    name: str
+    type_name: str
+    line_number: int = 0
+
+
+@dataclass
+class MethodBody:
+    invocations: list[MethodInvocationInfo] = field(default_factory=list)
+    local_variables: list[LocalVariable] = field(default_factory=list)
+
+
+@dataclass
+class FieldLineage:
+    source_system: str
+    source_entity: str
+    source_field: str
+    target_system: str
+    target_entity: str
+    target_field: str
+    mapping_type: str
+    transform_expr: str = ""
+    trigger_mode: str = "realtime"
+    confidence: float = 1.0
+    evidence: str = ""
+    source_file: str = ""
+    source_line: int = 0
+
+
+@dataclass
+class DataFlow:
+    flow_id: str
+    source_system: str
+    source_module: str
+    target_system: str
+    target_module: str
+    transport_type: str
+    data_objects: list[str] = field(default_factory=list)
+    frequency: str = "realtime"
+    volume_estimate: str = ""
+
+
+@dataclass
 class ProjectInfo:
     name: str
     path: Path

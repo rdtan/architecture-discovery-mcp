@@ -177,6 +177,93 @@ def generate_data_architecture_tool(project_path: str, output_dir: str = "", loc
 
 
 @mcp.tool()
+def generate_data_lineage_tool(
+    project_path: str,
+    output_dir: str = "",
+    locale: str = "zh",
+) -> str:
+    """生成数据血缘制品（DA-08 字段级映射清单、DA-09 数据流转清单）。
+
+    分析项目中的字段级数据血缘：MapStruct 注解映射、setter/getter 链、
+    BeanUtils.copyProperties、SQL 字段来源。同时检测跨系统数据流转
+    （Feign/MQ/Dubbo 集成）。
+
+    Args:
+        project_path: Java/Maven 项目根目录路径（须包含 pom.xml）
+        output_dir: 制品输出目录，默认为项目路径下的 arch-output/
+        locale: 输出语言 zh|en，默认 zh
+    """
+    from src.generators.lineage_combined_generator import generate_data_lineage
+
+    path = _validate_project_path(project_path, locale)
+
+    out = Path(output_dir) if output_dir else path / "arch-output"
+    out.mkdir(parents=True, exist_ok=True)
+
+    project = scan_project(path)
+    project = analyze_modules(project)
+
+    result = generate_data_lineage(project, out, locale)
+
+    response = {
+        "success": True,
+        "stats": result["stats"],
+        "artifacts": [
+            {"name": f.name, "path": str(f)} for f in result["files"]
+        ],
+    }
+    return json.dumps(response, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def analyze_field_impact(
+    project_path: str,
+    field: str,
+    output_dir: str = "",
+    locale: str = "zh",
+) -> str:
+    """分析某个字段变更的影响范围。
+
+    追踪指定字段的所有下游受影响字段，用于变更影响评估。
+    可选生成 DA-IMPACT Excel 报告。
+
+    Args:
+        project_path: Java/Maven 项目根目录路径（须包含 pom.xml）
+        field: 字段标识符，格式为 "system.entity.field"（例如 "order-service.Order.id"）
+        output_dir: 报告输出目录，为空时仅返回 JSON 不生成 Excel
+        locale: 输出语言 zh|en，默认 zh
+    """
+    import tempfile
+    from src.generators.lineage_combined_generator import generate_data_lineage
+    from src.generators.da_impact_generator import generate_da_impact
+
+    path = _validate_project_path(project_path, locale)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        project = scan_project(path)
+        project = analyze_modules(project)
+        result = generate_data_lineage(project, Path(tmp_dir), locale)
+
+    graph = result["graph"]
+    impact = graph.impact_analysis(field)
+
+    response = {
+        "field": field,
+        "total_affected": impact.total_affected,
+        "downstream_fields": impact.downstream_fields,
+        "paths": impact.paths,
+    }
+
+    if output_dir:
+        out_path = Path(output_dir)
+        out_path.mkdir(parents=True, exist_ok=True)
+        report_path = generate_da_impact(graph, field, out_path, locale)
+        response["report_path"] = str(report_path)
+
+    return json.dumps(response, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
 def generate_tech_architecture(project_path: str, output_dir: str = "", locale: str = "zh") -> str:
     """生成技术架构（TA 系列）制品。
 

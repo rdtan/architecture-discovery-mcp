@@ -10,6 +10,7 @@ class JavaMethod:
     return_type: str = ""
     parameters: list[dict] = field(default_factory=list)
     annotations: list[dict] = field(default_factory=list)
+    body: object | None = None
 
 
 @dataclass
@@ -100,6 +101,7 @@ def _build_java_class(
                     else:
                         detail["value"] = _annotation_value(ann.element)
                 m.annotations.append(detail)
+        m.body = _parse_method_body(method)
         methods.append(m)
 
     fields = []
@@ -156,3 +158,55 @@ def _annotation_value(value) -> str:
             f"{value.qualifier}.{value.member}" if value.qualifier else value.member
         )
     return str(value)
+
+
+def _walk_tree(node):
+    """Recursively yield all nodes in a javalang AST subtree."""
+    if isinstance(node, (list, tuple)):
+        for item in node:
+            yield from _walk_tree(item)
+    elif hasattr(node, 'children'):
+        yield node
+        for child in node.children:
+            if child is not None:
+                yield from _walk_tree(child)
+
+
+def _parse_method_body(method_node) -> dict | None:
+    """Parse a method body, extracting invocations and local variable declarations.
+
+    Returns None if the method has no body (abstract/interface methods).
+    """
+    if method_node.body is None:
+        return None
+
+    invocations = []
+    local_variables = []
+
+    for node in _walk_tree(method_node.body):
+        if isinstance(node, javalang.tree.MethodInvocation):
+            qualifier = node.qualifier if node.qualifier else ""
+            method_name = node.member
+            arguments = [str(arg) for arg in node.arguments] if node.arguments else []
+            line_number = node.position.line if node.position else 0
+            invocations.append({
+                "qualifier": qualifier,
+                "method_name": method_name,
+                "arguments": arguments,
+                "line_number": line_number,
+            })
+        elif isinstance(node, javalang.tree.LocalVariableDeclaration):
+            type_name = node.type.name if node.type else ""
+            line_number = node.position.line if node.position else 0
+            if node.declarators:
+                for decl in node.declarators:
+                    local_variables.append({
+                        "name": decl.name,
+                        "type_name": type_name,
+                        "line_number": line_number,
+                    })
+
+    return {
+        "invocations": invocations,
+        "local_variables": local_variables,
+    }

@@ -40,6 +40,103 @@ def parse_mapper_xmls(module_path: Path) -> dict[str, dict]:
     return result
 
 
+def parse_mapper_relationships(module_path: Path) -> list[dict]:
+    """Parse <association> and <collection> elements from mapper XMLs.
+
+    Scans `src/main/resources/mapper/` for XML files and extracts
+    entity relationships defined via MyBatis association/collection mappings.
+
+    Returns:
+        List of relationship dicts:
+        [{"source_entity": "Order", "target_entity": "OrderItem",
+          "relationship_type": "1:N", "property": "items", "column": "order_id"},
+         {"source_entity": "Order", "target_entity": "Customer",
+          "relationship_type": "N:1", "property": "customer", "column": "customer_id"}]
+    """
+    mapper_dir = module_path / "src" / "main" / "resources" / "mapper"
+    if not mapper_dir.exists():
+        return []
+
+    relationships: list[dict] = []
+
+    for xml_file in mapper_dir.rglob("*.xml"):
+        try:
+            _parse_single_mapper_relationships(xml_file, relationships)
+        except Exception as e:
+            logger.warning("Failed to parse mapper relationships in %s: %s", xml_file, e)
+
+    return relationships
+
+
+def _parse_single_mapper_relationships(xml_file: Path, relationships: list[dict]) -> None:
+    """Parse a single mapper XML file for association/collection relationships."""
+    content = xml_file.read_text(encoding="utf-8", errors="ignore")
+
+    # Remove DOCTYPE to avoid XML parsing issues with DTD references
+    content = re.sub(r'<!DOCTYPE[^>]*>', '', content)
+
+    try:
+        root = ET.fromstring(content)
+    except ET.ParseError:
+        logger.debug("XML parse error in %s, skipping relationship parsing", xml_file)
+        return
+
+    for result_map in root.findall(".//resultMap"):
+        type_name = result_map.get("type", "")
+        if not type_name:
+            continue
+
+        # Strip package prefix to get short entity name
+        source_entity = type_name.rsplit(".", 1)[-1]
+
+        _parse_associations(result_map, source_entity, relationships)
+        _parse_collections(result_map, source_entity, relationships)
+
+
+def _parse_associations(result_map: ET.Element, source_entity: str, relationships: list[dict]) -> None:
+    """Parse <association> elements (N:1 / many-to-one relationships)."""
+    for assoc in result_map.findall("association"):
+        java_type = assoc.get("javaType", "")
+        prop = assoc.get("property", "")
+        column = assoc.get("column", "")
+
+        if not java_type or not prop:
+            continue
+
+        # Strip package prefix from javaType
+        target_entity = java_type.rsplit(".", 1)[-1]
+
+        relationships.append({
+            "source_entity": source_entity,
+            "target_entity": target_entity,
+            "relationship_type": "N:1",
+            "property": prop,
+            "column": column,
+        })
+
+
+def _parse_collections(result_map: ET.Element, source_entity: str, relationships: list[dict]) -> None:
+    """Parse <collection> elements (1:N / one-to-many relationships)."""
+    for coll in result_map.findall("collection"):
+        of_type = coll.get("ofType", "")
+        prop = coll.get("property", "")
+        column = coll.get("column", "")
+
+        if not of_type or not prop:
+            continue
+
+        # Strip package prefix from ofType
+        target_entity = of_type.rsplit(".", 1)[-1]
+
+        relationships.append({
+            "source_entity": source_entity,
+            "target_entity": target_entity,
+            "relationship_type": "1:N",
+            "property": prop,
+            "column": column,
+        })
+
+
 def _parse_single_mapper(xml_file: Path, result: dict[str, dict]) -> None:
     """Parse a single mapper XML file and populate the result dict."""
     content = xml_file.read_text(encoding="utf-8", errors="ignore")
