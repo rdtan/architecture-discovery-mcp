@@ -28,10 +28,10 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Run tests
-        run: pytest tests/ -v --ignore=tests/test_mcp_server.py --ignore=tests/test_lineage_e2e_thingsboard.py
+        run: pytest tests/ -v --ignore=tests/test_mcp_server.py --ignore=tests/test_lineage_e2e_thingsboard.py --ignore=tests/test_mcp_lineage_tools.py
 
       - name: Run MCP server tests
-        run: pytest tests/test_mcp_server.py -v
+        run: pytest tests/test_mcp_server.py tests/test_mcp_lineage_tools.py -v
 
       - name: Run lineage e2e tests
         run: pytest tests/test_lineage_e2e_thingsboard.py -v --timeout=600
